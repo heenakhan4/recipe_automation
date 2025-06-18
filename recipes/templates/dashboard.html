@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .dashboard-container {
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 400px;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+    #add-btn {
+      background-color: #28a745;
+    }
+    #view-btn {
+      background-color: #007bff;
+    }
+    #logout-btn {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+  <h2>Welcome, <span id="username-display"></span>!</h2>
+  <button id="add-btn" onclick="goToAddRecipe()">Add New Recipe</button>
+  <button id="view-btn" onclick="goToViewRecipes()">View My Recipes</button>
+  <button id="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<script>
+  // Check if user is logged in
+  const accessToken = localStorage.getItem("access_token");
+  if (!accessToken) {
+    window.location.href = "/"; // redirect to login page
+  }
+
+  // Show username
+  const username = localStorage.getItem("username") || "User";
+  document.getElementById("username-display").textContent = username;
+
+  function goToAddRecipe() {
+    window.location.href = "/add-recipe.html";
+  }
+
+  function goToViewRecipes() {
+    window.location.href = "/my-recipes.html";
+  }
+
+  function logout() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    document.getElementById("dashboard-container").style.display = "none";
+    document.getElementById("auth-container").style.display = "block";
+  }
+</script>
+
+</body>
+</html>

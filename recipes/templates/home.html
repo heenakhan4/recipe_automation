@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login / Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0 20px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .toggle a {
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .error {
+      color: red;
+      font-size: 0.9em;
+      text-align: center;
+    }
+    .success {
+      color: green;
+      font-size: 0.9em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="auth-container">
+  <h2 id="form-title">Login</h2>
+  <div id="message"></div>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <input type="text" id="username" placeholder="Username" style="display:none;">
+  <button onclick="submitForm()">Login</button>
+  <div class="toggle">
+    <span id="toggle-text">Don't have an account? <a onclick="toggleMode()">Sign Up</a></span>
+  </div>
+</div>
+
+<div class="container" id="dashboard-container" style="display: none;">
+  <h2>Welcome, <span id="username-display"></span></h2>
+  <p>Your email: <span id="email-display"></span></p>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- <script>
+  let isLogin = true;
+
+  function toggleMode() {
+    isLogin = !isLogin;
+    const title = document.getElementById("form-title");
+    const usernameField = document.getElementById("username");
+    const toggleText = document.getElementById("toggle-text");
+    const button = document.querySelector("button");
+
+    if (isLogin) {
+      title.textContent = "Login";
+      usernameField.style.display = "none";
+      toggleText.innerHTML = "Don't have an account? <a onclick='toggleMode()'>Sign Up</a>";
+      button.textContent = "Login";
+    } else {
+      title.textContent = "Sign Up";
+      usernameField.style.display = "block";
+      toggleText.innerHTML = "Already have an account? <a onclick='toggleMode()'>Login</a>";
+      button.textContent = "Sign Up";
+    }
+
+    clearMessages();
+  }
+
+  function clearMessages() {
+    document.getElementById("message").innerHTML = "";
+  }
+
+  async function submitForm() {
+    clearMessages();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const username = document.getElementById("username").value.trim();
+
+    const endpoint = isLogin ? "/api/login/" : "/api/register/";
+    const payload = isLogin
+      ? { email, password }
+      : { username, email, password };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        document.getElementById("message").innerHTML =
+          `<p class="success">${data.message}</p>`;
+        if (data.data?.access) {
+          localStorage.setItem("access_token", data.data.access);
+          localStorage.setItem("refresh_token", data.data.refresh);
+          localStorage.setItem("username", data.data.username || username);
+          window.location.href = "/dashboard";
+        }
+      } else {
+        document.getElementById("message").innerHTML =
+          `<p class="error">${data.message || "An error occurred"}</p>`;
+      }
+    } catch (err) {
+      document.getElementById("message").innerHTML =
+        `<p class="error">Network error</p>`;
+      console.error(err);
+    }
+  }
+
+  function showDashboard(username, email) {
+    document.getElementById("auth-container").style.display = "none";
+    document.getElementById("dashboard-container").style.display = "block";
+    document.getElementById("username-display").textContent = username;
+    document.getElementById("email-display").textContent = email;
+  }
+
+  window.onload = function () {
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) {
+     
+      localStorage.setItem("username", data.data.username || username);
+      window.location.href = "/dashboard";
+    }
+  };
+</script> -->
+
+<script>
+  let isLogin = true;
+
+  function toggleMode() {
+    isLogin = !isLogin;
+    const title = document.getElementById("form-title");
+    const usernameField = document.getElementById("username");
+    const toggleText = document.getElementById("toggle-text");
+    const button = document.querySelector("button");
+
+    if (isLogin) {
+      title.textContent = "Login";
+      usernameField.style.display = "none";
+      toggleText.innerHTML = "Don't have an account? <a onclick='toggleMode()'>Sign Up</a>";
+      button.textContent = "Login";
+    } else {
+      title.textContent = "Sign Up";
+      usernameField.style.display = "block";
+      toggleText.innerHTML = "Already have an account? <a onclick='toggleMode()'>Login</a>";
+      button.textContent = "Sign Up";
+    }
+
+    clearMessages();
+  }
+
+  function clearMessages() {
+    document.getElementById("message").innerHTML = "";
+  }
+
+  async function submitForm() {
+    clearMessages();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const username = document.getElementById("username").value.trim();
+
+    const endpoint = isLogin ? "/api/login/" : "/api/register/";
+    const payload = isLogin
+      ? { email, password }
+      : { username, email, password };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      console.log("🟡 Raw response:", data);
+
+      if (res.ok && data.success) {
+        if (data.data && data.data.access && data.data.refresh) {
+          localStorage.setItem("access_token", data.data.access);
+          localStorage.setItem("refresh_token", data.data.refresh);
+          console.log("✅ Tokens saved to localStorage");
+          showDashboard();
+        } else {
+          console.warn("⚠️ Missing tokens in response:", data.data);
+          document.getElementById("message").innerHTML =
+            `<p class="error">Login succeeded, but tokens are missing.</p>`;
+        }
+      } else {
+        const errorMsg = data.message;
+        console.log("🔴 Login failed:", errorMsg);
+
+        // Handle token expiry
+        if (errorMsg === "Access token has expired!") {
+          const refreshed = await refreshToken();
+          if (refreshed) {
+            console.log("✅ Access token refreshed, proceeding to dashboard");
+            showDashboard();
+            return;
+          } else {
+            console.warn("❌ Could not refresh access token");
+          }
+        }
+
+        document.getElementById("message").innerHTML =
+          `<p class="error">${errorMsg || "An error occurred"}</p>`;
+      }
+    } catch (err) {
+      console.error("🛑 Network or unexpected error:", err);
+      document.getElementById("message").innerHTML =
+        `<p class="error">Network error</p>`;
+    }
+  }
+
+  async function showDashboard() {
+    const success = await getProtectedData();
+    if (success) {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("dashboard-container").style.display = "block";
+    } else {
+      logout("Session expired. Please log in again.");
+    }
+  }
+
+  async function getProtectedData() {
+    let accessToken = localStorage.getItem("access_token");
+    if (!accessToken) return false;
+
+    try {
+      let response = await fetch("/api/profile/", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // If token is expired, try refreshing it
+      if (response.status === 401) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          accessToken = localStorage.getItem("access_token");
+          response = await fetch("/api/profile/", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+        } else {
+          return false;
+        }
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        document.getElementById("username-display").textContent = data.data.username;
+        document.getElementById("email-display").textContent = data.data.email;
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Error fetching protected data:", err);
+      return false;
+    }
+  }
+
+  async function refreshToken() {
+    const refreshToken = localStorage.getItem("refresh_token");
+    console.log("refreshToken")
+    if (!refreshToken) return false;
+
+    try {
+      const res = await fetch("/api/refresh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Store new access token
+        localStorage.setItem("access_token", data.data.new_token);
+        return true;
+      } else {
+        // Handle expired or invalid refresh token
+        if (data.message === "Refresh token has expired" || data.message === "Invalid refresh token") {
+          logout();  // clear tokens and redirect
+        }
+        return false;
+      }
+    } catch (err) {
+      console.error("Refresh token request failed", err);
+      return false;
+    }
+  }
+
+
+  function logout(message = "") {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    document.getElementById("dashboard-container").style.display = "none";
+    document.getElementById("auth-container").style.display = "block";
+    if (message) {
+      document.getElementById("message").innerHTML = `<p class="error">${message}</p>`;
+    }
+  }
+
+  window.onload = function () {
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) {
+      showDashboard();
+    }
+  };
+</script>
+
+
+</body>
+</html> 
