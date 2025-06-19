@@ -218,12 +218,15 @@
 
       const data = await res.json();
       console.log("🟡 Raw response:", data);
+      // localStorage.setItem(data);
 
       if (res.ok && data.success) {
         if (data.data && data.data.access && data.data.refresh) {
-          localStorage.setItem("access_token", data.data.access);
-          localStorage.setItem("refresh_token", data.data.refresh);
-          console.log("✅ Tokens saved to localStorage");
+          // localStorage.setItem("access_token", data.data.access);
+          // localStorage.setItem("refresh_token", data.data.refresh);
+          sessionStorage.setItem("access_token", data.data.access);
+          sessionStorage.setItem("refresh_token", data.data.refresh);
+          console.log("✅ Tokens saved to sessionStorage");
           showDashboard();
         } else {
           console.warn("⚠️ Missing tokens in response:", data.data);
@@ -267,7 +270,7 @@
   }
 
   async function getProtectedData() {
-    let accessToken = localStorage.getItem("access_token");
+    let accessToken = sessionStorage.getItem("access_token");
     if (!accessToken) return false;
 
     try {
@@ -282,7 +285,7 @@
       if (response.status === 401) {
         const refreshed = await refreshToken();
         if (refreshed) {
-          accessToken = localStorage.getItem("access_token");
+          accessToken = sessionStorage.getItem("access_token");
           response = await fetch("/api/profile/", {
             method: "GET",
             headers: {
@@ -308,12 +311,12 @@
   }
 
   async function refreshToken() {
-    const refreshToken = localStorage.getItem("refresh_token");
-    console.log("refreshToken")
+    const refreshToken = sessionStorage.getItem("refresh_token");
+    console.log(refreshToken)
     if (!refreshToken) return false;
 
     try {
-      const res = await fetch("/api/refresh/", {
+      const res = await fetch("/api/login/refresh/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refreshToken })
@@ -323,7 +326,7 @@
 
       if (res.ok && data.success) {
         // Store new access token
-        localStorage.setItem("access_token", data.data.new_token);
+        sessiontorage.setItem("access_token", data.data.new_token);
         return true;
       } else {
         // Handle expired or invalid refresh token
@@ -340,8 +343,8 @@
 
 
   function logout(message = "") {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
     document.getElementById("dashboard-container").style.display = "none";
     document.getElementById("auth-container").style.display = "block";
     if (message) {
@@ -350,7 +353,7 @@
   }
 
   window.onload = function () {
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = sessionStorage.getItem("access_token");
     if (accessToken) {
       showDashboard();
     }

@@ -72,9 +72,9 @@ def login_user_api(request):
     user = db.users.find_one({'email':email})
     print(user['_id'])
     if user and check_password(password, user["password_hash"]):
-        print(user,check_password(password, user["password_hash"]) )
+        # print(user,check_password(password, user["password_hash"]) )
         existing_tokens = db.tokens.find_one({'user_id': user['_id']})
-        print(existing_tokens)
+        # print(existing_tokens)
        
         if not existing_tokens:
             access_token_exp = int((datetime.now(timezone.utc)+timedelta(days=1)).timestamp())
@@ -211,13 +211,33 @@ def renew_access_token(request):
 
 @api_view(['GET'])
 def profile_view(request):
-    user = request.user
+    print("here")
+    auth_header = request.headers.get('Authorization')
+
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return Response({"success": False, "message": "Authorization header missing or invalid"},
+                        status=status.HTTP_401_UNAUTHORIZED)
+
+    token = auth_header.split(' ')[1]
+    print("This is the access token:",token)
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        print(payload)
+        username = payload.get('username')
+        email = payload.get('email')
+    except jwt.ExpiredSignatureError:
+        return Response({"success": False, "message": "Access token has expired"},
+                        status=status.HTTP_401_UNAUTHORIZED)
+    except jwt.InvalidTokenError:
+        return Response({"success": False, "message": "Invalid access token"},
+                        status=status.HTTP_401_UNAUTHORIZED)
 
     return Response({
         "success": True,
         "message": "Authenticated user",
-        "data":{
-            "username": user.username,
-            "email": user.email
+        "data": {
+            "username": username,
+            "email": email
         }
     }, status=status.HTTP_200_OK)
