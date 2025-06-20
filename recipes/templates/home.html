@@ -222,10 +222,8 @@
 
       if (res.ok && data.success) {
         if (data.data && data.data.access && data.data.refresh) {
-          // localStorage.setItem("access_token", data.data.access);
-          // localStorage.setItem("refresh_token", data.data.refresh);
-          sessionStorage.setItem("access_token", data.data.access);
-          sessionStorage.setItem("refresh_token", data.data.refresh);
+          localStorage.setItem("access_token", data.data.access);
+          localStorage.setItem("refresh_token", data.data.refresh);
           console.log("✅ Tokens saved to sessionStorage");
           showDashboard();
         } else {
@@ -235,6 +233,7 @@
         }
       } else {
         const errorMsg = data.message;
+        localStorage.setItem("refresh_token",data.refresh_token)
         console.log("🔴 Login failed:", errorMsg);
 
         // Handle token expiry
@@ -262,15 +261,14 @@
   async function showDashboard() {
     const success = await getProtectedData();
     if (success) {
-      document.getElementById("auth-container").style.display = "none";
-      document.getElementById("dashboard-container").style.display = "block";
+      window.location.href = "dashboard/";
     } else {
       logout("Session expired. Please log in again.");
     }
   }
 
   async function getProtectedData() {
-    let accessToken = sessionStorage.getItem("access_token");
+    let accessToken = localStorage.getItem("access_token");
     if (!accessToken) return false;
 
     try {
@@ -285,7 +283,7 @@
       if (response.status === 401) {
         const refreshed = await refreshToken();
         if (refreshed) {
-          accessToken = sessionStorage.getItem("access_token");
+          accessToken = localStorage.getItem("access_token");
           response = await fetch("/api/profile/", {
             method: "GET",
             headers: {
@@ -299,8 +297,13 @@
 
       const data = await response.json();
       if (data.success && data.data) {
-        document.getElementById("username-display").textContent = data.data.username;
-        document.getElementById("email-display").textContent = data.data.email;
+        const userDetails = {
+          username: data.data.username,
+          email: data.data.email,
+          is_active: data.data.is_active 
+        };
+        localStorage.setItem("userDetails", JSON.stringify(userDetails));
+        
         return true;
       }
       return false;
@@ -311,7 +314,7 @@
   }
 
   async function refreshToken() {
-    const refreshToken = sessionStorage.getItem("refresh_token");
+    const refreshToken = localStorage.getItem("refresh_token");
     console.log(refreshToken)
     if (!refreshToken) return false;
 
@@ -326,7 +329,7 @@
 
       if (res.ok && data.success) {
         // Store new access token
-        sessiontorage.setItem("access_token", data.data.new_token);
+        localStorage.setItem("access_token", data.data.new_token);
         return true;
       } else {
         // Handle expired or invalid refresh token
@@ -343,8 +346,10 @@
 
 
   function logout(message = "") {
-    sessionStorage.removeItem("access_token");
-    sessionStorage.removeItem("refresh_token");
+    // sessionStorage.removeItem("access_token");
+    // sessionStorage.removeItem("refresh_token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     document.getElementById("dashboard-container").style.display = "none";
     document.getElementById("auth-container").style.display = "block";
     if (message) {
@@ -353,7 +358,7 @@
   }
 
   window.onload = function () {
-    const accessToken = sessionStorage.getItem("access_token");
+    const accessToken = localStorage.getItem("access_token");
     if (accessToken) {
       showDashboard();
     }

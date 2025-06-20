@@ -26,6 +26,8 @@ def home(request):
 def dashboard(request):
     return render(request,'dashboard.html')
 
+def add_recipe(request):
+    return render(request,'add-recipes.html')
 
 # resgister new user
 @api_view(['POST'])
@@ -85,6 +87,7 @@ def login_user_api(request):
                 "username":user["username"],
                 "user_id":str(user["_id"]),
                 "email":user["email"],
+                "is_active":user["is_active"],
                 "exp": access_token_exp,
                 "refresh_exp": refresh_token_exp,
                 "iat": access_token_iat
@@ -98,6 +101,7 @@ def login_user_api(request):
                 {"$set": {
                     "access": access_token,
                     "refresh": refresh_token,
+                    "refresh_exp": refresh_token_exp,
                     "updated_at": datetime.now(timezone.utc)
                 }},
                 upsert=True
@@ -181,6 +185,7 @@ def renew_access_token(request):
                 "username":user["username"],
                 "user_id":str(user["_id"]),
                 "email":user["email"],
+                "is_active":user["is_active"],
                 "exp": access_token_exp,
                 "iat": access_token_iat,
                 "refresh_exp": token_entry["refresh_exp"]
@@ -211,33 +216,35 @@ def renew_access_token(request):
 
 @api_view(['GET'])
 def profile_view(request):
-    print("here")
-    auth_header = request.headers.get('Authorization')
+    print("Inside profile view")  # Check if this prints
 
-    if not auth_header or not auth_header.startswith('Bearer '):
-        return Response({"success": False, "message": "Authorization header missing or invalid"},
-                        status=status.HTTP_401_UNAUTHORIZED)
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return Response({"message": "No token provided"}, status=status.HTTP_401_UNAUTHORIZED)
 
     token = auth_header.split(' ')[1]
-    print("This is the access token:",token)
+    print(f"token received: {token}")
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-        print(payload)
-        username = payload.get('username')
-        email = payload.get('email')
+        decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
-        return Response({"success": False, "message": "Access token has expired"},
-                        status=status.HTTP_401_UNAUTHORIZED)
-    except jwt.InvalidTokenError:
-        return Response({"success": False, "message": "Invalid access token"},
-                        status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"message": "Access token has expired"}, status=status.HTTP_401_UNAUTHORIZED)
+    except jwt.InvalidTokenError as e:
+        return Response({"message": "Invalid token", "error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Extract user info
+    username = decoded.get("username")
+    email = decoded.get("email")
+    user_id = decoded.get("user_id")
+    is_active = decoded.get("is_active")
 
     return Response({
         "success": True,
         "message": "Authenticated user",
         "data": {
             "username": username,
-            "email": email
+            "email": email,
+            "user_id": user_id,
+            "is_active": is_active
         }
     }, status=status.HTTP_200_OK)

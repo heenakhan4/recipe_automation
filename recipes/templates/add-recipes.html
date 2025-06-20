@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Recipe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9f9fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .form-container {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 500;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: white;
+    }
+
+    #submit-btn {
+      background-color: #28a745;
+    }
+
+    #cancel-btn {
+      background-color: #dc3545;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <h2>Add a New Recipe</h2>
+  <div class="message" id="message"></div>
+  <form id="recipe-form">
+    <label for="title">Recipe Title</label>
+    <input type="text" id="title" required />
+
+    <label for="ingredients">Ingredients</label>
+    <textarea id="ingredients" required></textarea>
+
+    <label for="instructions">Instructions</label>
+    <textarea id="instructions" required></textarea>
+
+    <div class="btn-group">
+      <button type="submit" id="submit-btn">Submit</button>
+      <button type="button" id="cancel-btn" onclick="goBack()">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const accessToken = sessionStorage.getItem("access_token");
+  if (!accessToken) {
+    window.location.href = "/";
+  }
+
+  const form = document.getElementById("recipe-form");
+  const message = document.getElementById("message");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      title: document.getElementById("title").value.trim(),
+      ingredients: document.getElementById("ingredients").value.trim(),
+      instructions: document.getElementById("instructions").value.trim()
+    };
+
+    try {
+      const res = await fetch("/api/add-recipe/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        message.innerHTML = `<p class="success">✅ ${data.message || "Recipe added successfully!"}</p>`;
+        form.reset();
+      } else {
+        message.innerHTML = `<p class="error">❌ ${data.message || "Something went wrong"}</p>`;
+      }
+    } catch (err) {
+      console.error("Error submitting recipe:", err);
+      message.innerHTML = `<p class="error">⚠️ Network error</p>`;
+    }
+  });
+
+  function goBack() {
+    window.location.href = "/dashboard.html";
+  }
+</script>
+
+</body>
+</html>
